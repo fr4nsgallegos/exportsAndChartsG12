@@ -2,5 +2,6 @@ import 'package:exportsandchartsg12/pages/home_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MaterialApp(home: HomePage()));
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MaterialApp(home: HomePage(), debugShowCheckedModeBanner: false));
 }
