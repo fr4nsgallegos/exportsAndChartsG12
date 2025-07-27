@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:open_filex/open_filex.dart';
@@ -9,6 +10,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:path/path.dart' as path;
 
 class HomePage extends StatelessWidget {
+  // EXPORTACIÓN A PDF
   Future<File> generarPdf() async {
     // Crear documento PDF
     final pdf = pw.Document();
@@ -140,6 +142,59 @@ class HomePage extends StatelessWidget {
     return ElevatedButton(onPressed: action, child: Text(text));
   }
 
+  // EXPOTACIÓN A EXCEL
+  void exporToExcel() async {
+    // Crear el libro Excel
+    var excel = Excel.createExcel(); //Esto crea el archivo excel vacio
+
+    // Obteniendo la hoja activa o crear una nueva hoja
+    Sheet sheetObject = excel["MySheet"];
+
+    // Agregarmos datos a las celdas
+    sheetObject.cell(CellIndex.indexByString("A1")).value = TextCellValue(
+      "NOMBRE",
+    );
+    sheetObject
+        .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 0))
+        .value = TextCellValue(
+      "EDAD",
+    );
+    sheetObject.cell(CellIndex.indexByString("C1")).value = TextCellValue(
+      "PAÍS",
+    );
+
+    // Agregando filas dinámicamete
+    List<List<dynamic>> data = [
+      ["Carlos", 25, "Perú"],
+      ["Ana", 32, "México"],
+      ["Isaias", 63, "España"],
+    ];
+
+    for (int i = 0; i < data.length; i++) {
+      for (int j = 0; j < data[i].length; j++) {
+        sheetObject.cell(
+          CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i + 1),
+        );
+      }
+    }
+
+    // Guardar excel
+    var bytes = excel.encode();
+
+    // Obteniendo el directorio de almacenamiento
+    Directory? diretory = await getExternalStorageDirectory();
+    String filePath = "${diretory!.path}/Reporte.xlsx";
+
+    // Guardar el archivo
+    File(filePath)
+      ..createSync(recursive: true)
+      ..writeAsBytes(bytes!);
+    print("Archivo guardado en: $filePath");
+
+    OpenResult result = await OpenFilex.open(filePath);
+    print("Estado de apertura: $result");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -158,6 +213,9 @@ class HomePage extends StatelessWidget {
             _buildButton("Generar PDF con imágen", () async {
               final pdfFile = await generarPdfConImagen();
               openPdfFile(pdfFile);
+            }),
+            _buildButton("Generar excel", () async {
+              exporToExcel();
             }),
           ],
         ),
