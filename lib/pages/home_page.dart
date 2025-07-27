@@ -16,7 +16,22 @@ class HomePage extends StatelessWidget {
       pw.Page(
         build: (pw.Context context) {
           return pw.Center(
-            child: pw.Text("Hola, este es un pdf creado en flutter!"),
+            child: pw.Column(
+              mainAxisAlignment: pw.MainAxisAlignment.center,
+              children: [
+                pw.Text(
+                  "Hola, este es un pdf creado en flutter!",
+                  style: pw.TextStyle(
+                    fontSize: 30,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 16),
+                pw.Text("Factura:"),
+                pw.Text("Cliente: Juan Perez"),
+                pw.Text("Fecha: 27/05/2025"),
+              ],
+            ),
           );
         },
       ),
@@ -27,6 +42,35 @@ class HomePage extends StatelessWidget {
 
     // usando path para generar correctamente la ruta
     final filePath = path.join(output.path, "example.pdf");
+    final file = File(filePath);
+
+    // Guardar el archivo
+    await file.writeAsBytes(await pdf.save());
+    print("PDF guardado en ${file.path}");
+    return file;
+  }
+
+  Future<File> generarTablePdf() async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Table.fromTextArray(
+            headers: ["Producto", "Cantidad", "Precio"],
+            data: [
+              ["Laptop", "1", "\$14500"],
+              ["Mouse", "2", "\$500"],
+              ["Teclado", "3", "\$300"],
+            ],
+          );
+        },
+      ),
+    );
+    // Obtener la ruta de almacenamiento local
+    final output = await getApplicationDocumentsDirectory();
+
+    // usando path para generar correctamente la ruta
+    final filePath = path.join(output.path, "exampleWithTable.pdf");
     final file = File(filePath);
 
     // Guardar el archivo
@@ -58,6 +102,10 @@ class HomePage extends StatelessWidget {
           children: [
             _buildButton("Generar PDF", () async {
               final pdfFile = await generarPdf();
+              openPdfFile(pdfFile);
+            }),
+            _buildButton("Generar PDF con tabla", () async {
+              final pdfFile = await generarTablePdf();
               openPdfFile(pdfFile);
             }),
           ],
