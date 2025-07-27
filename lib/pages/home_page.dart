@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:excel/excel.dart';
@@ -142,6 +143,18 @@ class HomePage extends StatelessWidget {
     return ElevatedButton(onPressed: action, child: Text(text));
   }
 
+  CellValue getCellValue(dynamic value) {
+    if (value is String) {
+      return TextCellValue(value);
+    } else if (value is int) {
+      return IntCellValue(value);
+    } else if (value is double) {
+      return DoubleCellValue(value);
+    } else {
+      return TextCellValue(value.toString());
+    }
+  }
+
   // EXPOTACIÓN A EXCEL
   void exporToExcel() async {
     // Crear el libro Excel
@@ -172,8 +185,74 @@ class HomePage extends StatelessWidget {
 
     for (int i = 0; i < data.length; i++) {
       for (int j = 0; j < data[i].length; j++) {
-        sheetObject.cell(
-          CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i + 1),
+        sheetObject
+            .cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i + 1))
+            .value = getCellValue(
+          data[i][j],
+        );
+      }
+    }
+
+    // Guardar excel
+    var bytes = excel.encode();
+
+    // Obteniendo el directorio de almacenamiento
+    Directory? diretory = await getExternalStorageDirectory();
+    String filePath = "${diretory!.path}/Reporte.xlsx";
+
+    // Guardar el archivo
+    File(filePath)
+      ..createSync(recursive: true)
+      ..writeAsBytes(bytes!);
+    print("Archivo guardado en: $filePath");
+
+    OpenResult result = await OpenFilex.open(filePath);
+    print("Estado de apertura: $result");
+  }
+
+  void exportMultipleSheets() async {
+    var excel = Excel.createExcel();
+
+    // Hoja1
+    var sheet1 = excel["Hoja1"];
+    sheet1.cell(CellIndex.indexByString("A1")).value = getCellValue("Producto");
+    sheet1.cell(CellIndex.indexByString("B1")).value = getCellValue("Precio");
+    sheet1.cell(CellIndex.indexByString("C1")).value = getCellValue("Cantidad");
+
+    List<List<dynamic>> products = [
+      ["Laptop", 1500.00, 10],
+      ["Mouse", 30.50, 50],
+      ["Teclado", 200.00, 44],
+    ];
+
+    for (int i = 0; i < products.length; i++) {
+      for (int j = 0; j < products[i].length; j++) {
+        sheet1
+            .cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i + 1))
+            .value = getCellValue(
+          products[i][j],
+        );
+      }
+    }
+
+    // HOJA 2
+    var sheet2 = excel["Hoja2"];
+    sheet2.cell(CellIndex.indexByString("A1")).value = getCellValue("Nombre");
+    sheet2.cell(CellIndex.indexByString("B1")).value = getCellValue("Correo");
+    sheet2.cell(CellIndex.indexByString("C1")).value = getCellValue("Teléfono");
+
+    List<List<dynamic>> users = [
+      ["Jhon", "jobjhon@gmail.com", "955555555"],
+      ["Frans", "Frans@frans.com", "8546546546"],
+      ["Teresa", "t.tt@gmail.com", "8949868"],
+    ];
+
+    for (int i = 0; i < users.length; i++) {
+      for (int j = 0; j < users[i].length; j++) {
+        sheet2
+            .cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i + 1))
+            .value = getCellValue(
+          users[i][j],
         );
       }
     }
@@ -216,6 +295,9 @@ class HomePage extends StatelessWidget {
             }),
             _buildButton("Generar excel", () async {
               exporToExcel();
+            }),
+            _buildButton("Generar excel con varias hojas", () async {
+              exportMultipleSheets();
             }),
           ],
         ),
