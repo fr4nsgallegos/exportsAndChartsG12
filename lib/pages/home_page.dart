@@ -274,6 +274,65 @@ class HomePage extends StatelessWidget {
     print("Estado de apertura: $result");
   }
 
+  void exportWithStyles() async {
+    var excel = Excel.createExcel();
+
+    var sheet = excel["Estilos"];
+
+    // CREAMOS EL ESTILO
+    var cellStyle = CellStyle(
+      bold: true,
+      fontColorHex: ExcelColor.fromHexString("#2775E4"),
+      backgroundColorHex: ExcelColor.cyan,
+      fontSize: 12,
+      horizontalAlign: HorizontalAlign.Center,
+      verticalAlign: VerticalAlign.Center,
+    );
+
+    sheet.cell(CellIndex.indexByString("A1")).value = getCellValue("Nombre");
+    sheet.cell(CellIndex.indexByString("A1")).cellStyle = cellStyle;
+
+    sheet.cell(CellIndex.indexByString("B1")).value = getCellValue("Correo");
+    sheet.cell(CellIndex.indexByString("B1")).cellStyle = cellStyle;
+
+    sheet.cell(CellIndex.indexByString("C1")).value = getCellValue("Teléfono");
+    sheet.cell(CellIndex.indexByString("C1")).cellStyle = cellStyle;
+
+    sheet.setColumnWidth(1, 20);
+    sheet.setRowHeight(0, 25);
+    List<List<dynamic>> users = [
+      ["Jhon", "jobjhon@gmail.com", "955555555"],
+      ["Frans", "Frans@frans.com", "8546546546"],
+      ["Teresa", "t.tt@gmail.com", "8949868"],
+    ];
+
+    for (int i = 0; i < users.length; i++) {
+      for (int j = 0; j < users[i].length; j++) {
+        sheet
+            .cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i + 1))
+            .value = getCellValue(
+          users[i][j],
+        );
+      }
+    }
+
+    // Guardar excel
+    var bytes = excel.encode();
+
+    // Obteniendo el directorio de almacenamiento
+    Directory? diretory = await getExternalStorageDirectory();
+    String filePath = "${diretory!.path}/Reporte.xlsx";
+
+    // Guardar el archivo
+    File(filePath)
+      ..createSync(recursive: true)
+      ..writeAsBytes(bytes!);
+    print("Archivo guardado en: $filePath");
+
+    OpenResult result = await OpenFilex.open(filePath);
+    print("Estado de apertura: $result");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -298,6 +357,9 @@ class HomePage extends StatelessWidget {
             }),
             _buildButton("Generar excel con varias hojas", () async {
               exportMultipleSheets();
+            }),
+            _buildButton("Generar excel con estilos", () async {
+              exportWithStyles();
             }),
           ],
         ),
